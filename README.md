@@ -16,25 +16,6 @@ Sample run:
 
 ```sh
 [ppai@gd2-1 battleship]$ ./battleship input.txt output.txt
-Grid Size: 5
-Total Ships : 5
-
-P1 Ship Positions:
-_ _ _ _ _ 
-_ B _ _ _ 
-B _ _ B _ 
-_ _ _ _ B 
-_ _ _ B _ 
-
-P2 Ship Positions:
-_ B _ _ _ 
-_ _ _ _ _ 
-_ _ _ B _ 
-B _ _ _ B 
-_ B _ _ _ 
-
-Total Missiles: 5
-
 Player1
 O O _ _ _ 
 _ X _ _ _ 

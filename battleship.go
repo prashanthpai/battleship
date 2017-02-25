@@ -108,6 +108,12 @@ func launchMissile(ship [][]byte, target missileTarget) bool {
 }
 
 func main() {
+
+	if len(os.Args) != 3 {
+		fmt.Printf("Usage: %s <input-file> <output-file>\n", os.Args[0])
+		os.Exit(-1)
+	}
+
 	inputFile, err := os.Open(os.Args[1])
 	if err != nil {
 		log.Println(err)
@@ -115,24 +121,31 @@ func main() {
 	}
 	defer inputFile.Close()
 
+	outputFile, err := os.Create(os.Args[2])
+	if err != nil {
+		log.Println(err)
+		os.Exit(-1)
+	}
+	defer outputFile.Close()
+
 	reader := bufio.NewReader(inputFile)
 
 	gridSize := getLineAsInt(reader)
+	if gridSize < 0 || gridSize >= 10 {
+		fmt.Printf("Grid Size should be 0 < M < 10\n")
+		os.Exit(-1)
+	}
 	totalShips := getLineAsInt(reader)
-
-	fmt.Printf("Grid Size: %d\n", gridSize)
-	fmt.Printf("Total Ships : %d\n", totalShips)
+	if totalShips < 0 || totalShips > gridSize/2 {
+		fmt.Printf("Warning: Total ships should be 0 < S <= M/2\n")
+		// The sample input doesn't satisfy this condition
+		//os.Exit(-1)
+	}
 
 	p1Ships := createMatrix(reader, gridSize)
-	fmt.Printf("\nP1 Ship Positions:\n")
-	prettyPrintMatrix(p1Ships, gridSize, os.Stdout)
-
 	p2Ships := createMatrix(reader, gridSize)
-	fmt.Printf("\nP2 Ship Positions:\n")
-	prettyPrintMatrix(p2Ships, gridSize, os.Stdout)
 
 	totalMissiles := getLineAsInt(reader)
-	fmt.Printf("\nTotal Missiles: %d\n\n", totalMissiles)
 
 	p1Moves := make(chan missileTarget)
 	p2Moves := make(chan missileTarget)
@@ -142,22 +155,13 @@ func main() {
 
 	var p1Hits, p2Hits int
 	for i := 0; i < totalMissiles; i++ {
-		m1 := <-p1Moves
-		if launchMissile(p1Ships, m1) {
+		if launchMissile(p1Ships, <-p1Moves) {
 			p2Hits++
 		}
-		m2 := <-p2Moves
-		if launchMissile(p2Ships, m2) {
+		if launchMissile(p2Ships, <-p2Moves) {
 			p1Hits++
 		}
 	}
-
-	outputFile, err := os.Create(os.Args[2])
-	if err != nil {
-		log.Println(err)
-		os.Exit(-1)
-	}
-	defer outputFile.Close()
 
 	writer := io.MultiWriter(outputFile, os.Stdout)
 
