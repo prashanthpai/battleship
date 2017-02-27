@@ -5,7 +5,8 @@ This is an entry to the [Gophercon Coding Challenge](https://github.com/gojek-en
 ### Building and running
 
 ```sh
-$ https://github.com/prashanthpai/battleship
+$ git clone https://github.com/prashanthpai/battleship
+$ cd battleship
 $ go build battleship.go
 $ ./battleship input.txt output.txt
 ```

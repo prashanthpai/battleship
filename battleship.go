@@ -62,9 +62,13 @@ func prettyPrintMatrix(matrix [][]byte, size int, writer io.Writer) {
 		}
 		fmt.Fprintf(writer, "\n")
 	}
+	fmt.Fprintf(writer, "\n")
 }
 
 func printResult(p1Count, p2Count int, writer io.Writer) {
+	fmt.Fprintf(writer, "P1:%d\n", p1Count)
+	fmt.Fprintf(writer, "P2:%d\n", p2Count)
+
 	switch {
 	case p1Count > p2Count:
 		fmt.Fprintln(writer, "Player 1 wins")
@@ -135,11 +139,10 @@ func main() {
 		fmt.Printf("Grid Size should be 0 < M < 10\n")
 		os.Exit(-1)
 	}
+
 	totalShips := getLineAsInt(reader)
 	if totalShips < 0 || totalShips > gridSize/2 {
 		fmt.Printf("Warning: Total ships should be 0 < S <= M/2\n")
-		// The sample input doesn't satisfy this condition
-		//os.Exit(-1)
 	}
 
 	p1Ships := createMatrix(reader, gridSize)
@@ -167,11 +170,8 @@ func main() {
 
 	fmt.Fprintf(writer, "Player1\n")
 	prettyPrintMatrix(p1Ships, gridSize, writer)
-
-	fmt.Fprintf(writer, "\nPlayer2\n")
+	fmt.Fprintf(writer, "Player2\n")
 	prettyPrintMatrix(p2Ships, gridSize, writer)
 
-	fmt.Fprintf(writer, "\nP1:%d\n", p1Hits)
-	fmt.Fprintf(writer, "P2:%d\n", p2Hits)
 	printResult(p1Hits, p2Hits, writer)
 }
