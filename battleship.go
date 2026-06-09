@@ -10,6 +10,27 @@ import (
 	"strings"
 )
 
+func readLimitedLine(reader *bufio.Reader, maxBytes int) string {
+	var b strings.Builder
+	for {
+		part, err := reader.ReadSlice('\n')
+		if len(part) > 0 {
+			if b.Len()+len(part) > maxBytes {
+				log.Println("input line too long")
+				os.Exit(-1)
+			}
+			b.Write(part)
+		}
+		if err == nil {
+			return strings.TrimSpace(b.String())
+		}
+		if err != bufio.ErrBufferFull {
+			log.Println(err)
+			os.Exit(-1)
+		}
+	}
+}
+
 func getLineAsInt(reader *bufio.Reader) int {
 	numberStr, err := reader.ReadString('\n')
 	if err != nil {
@@ -26,7 +47,7 @@ func getLineAsInt(reader *bufio.Reader) int {
 	return int(number)
 }
 
-func createMatrix(reader *bufio.Reader, size int) [][]byte {
+func createMatrix(reader *bufio.Reader, size, totalShips int) [][]byte {
 
 	ships := make([][]byte, size)
 	for i := range ships {
@@ -39,16 +60,43 @@ func createMatrix(reader *bufio.Reader, size int) [][]byte {
 		}
 	}
 
-	line, err := reader.ReadString('\n')
-	if err != nil {
-		log.Println(err)
+	// Max possible tokens are bounded by the board area; cap bytes as well.
+	maxTokens := size * size
+	maxLineBytes := (maxTokens * 8) + 1
+	line := readLimitedLine(reader, maxLineBytes)
+
+	var tokenCount int
+	if line != "" {
+		tokenCount = strings.Count(line, ",") + 1
+	}
+	if tokenCount > maxTokens {
+		log.Println("too many ship coordinates")
 		os.Exit(-1)
 	}
+	if tokenCount != totalShips {
+		log.Println("invalid number of ship coordinates")
+		os.Exit(-1)
+	}
+	if tokenCount == 0 {
+		return ships
+	}
 
-	for _, xyStr := range strings.Split(strings.TrimSpace(line), ",") {
-		xySubStr := strings.Split(xyStr, ":")
-		x, _ := strconv.ParseInt(xySubStr[0], 10, 0)
-		y, _ := strconv.ParseInt(xySubStr[1], 10, 0)
+	for _, xyStr := range strings.Split(line, ",") {
+		xySubStr := strings.SplitN(xyStr, ":", 2)
+		if len(xySubStr) != 2 {
+			log.Println("invalid ship coordinate")
+			os.Exit(-1)
+		}
+		x, err := strconv.ParseInt(xySubStr[0], 10, 0)
+		if err != nil {
+			log.Println(err)
+			os.Exit(-1)
+		}
+		y, err := strconv.ParseInt(xySubStr[1], 10, 0)
+		if err != nil {
+			log.Println(err)
+			os.Exit(-1)
+		}
 		ships[x][y] = 'B'
 	}
 
@@ -144,9 +192,13 @@ func main() {
 	if totalShips < 0 || totalShips > gridSize/2 {
 		fmt.Printf("Warning: Total ships should be 0 < S <= M/2\n")
 	}
+	if totalShips > gridSize*gridSize {
+		log.Println("invalid total ships value")
+		os.Exit(-1)
+	}
 
-	p1Ships := createMatrix(reader, gridSize)
-	p2Ships := createMatrix(reader, gridSize)
+	p1Ships := createMatrix(reader, gridSize, totalShips)
+	p2Ships := createMatrix(reader, gridSize, totalShips)
 
 	totalMissiles := getLineAsInt(reader)
 
